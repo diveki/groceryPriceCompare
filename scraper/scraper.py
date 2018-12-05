@@ -50,7 +50,10 @@ class SearchURL:
         self._search_term = search_term
         self._store       = store
         self._page_num    = 0
-        self._url = ''
+        self._url         = ''
+        self._error404_counter = 0
+        self._page_limit  = 3
+        self._items       = []
 
     @property
     def search_term(self):
@@ -80,7 +83,30 @@ class SearchURL:
 
     def make_new_url(self):
         self.url = self.store.url + self.search_term + '&' + self.store.page + str(self.page_num)
-        self.page_num += 1
+
+    def start_collecting_data(self):
+        while self.page_num < self._page_limit and self._error404_counter < 2:
+            self.make_new_url()
+            res = self.request_url()
+            if res != -1:
+                self._items.append(res)
+            self.page_num += 1
+
+    def request_url(self):
+        r = requests.get(self.url)
+        if r.status_code == 404:
+            self._error404_counter += 1
+            return -1
+        else:
+            self._error404_counter = 0
+            return self.get_details(r)
+
+    def get_details(self, r):
+        return bs4.BeautifulSoup(r.text)
+
+
+
+
 
 
 
