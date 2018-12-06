@@ -4,12 +4,15 @@ Scraping classes
 
 import requests
 import bs4
+#import numpy as np
 
 STORE_DICT = [{'name': 'Tesco',
-               'url': 'https://www.tesco.com/groceries/en-GB/search?query=',
+               'url': 'https://www.tesco.com/',
+               'search': 'groceries/en-GB/search?query=',
                'page': 'page='},
               {'name': 'Sainsbury',
-               'url': 'https://www.sainsburys.co.uk/webapp/wcs/stores/servlet/SearchDisplayView?storeId=10151&searchTerm=',
+               'url': 'https://www.sainsburys.co.uk/',
+               'search': 'webapp/wcs/stores/servlet/SearchDisplayView?storeId=10151&searchTerm=',
                'page': 'beginIndex='}
               ]
 
@@ -18,6 +21,7 @@ class Store:
     def __init__(self, store):
         self._name  = store['name']
         self._url   = store['url']
+        self._search_url = store['search']
         self._page  = store['page']
 
     @property
@@ -34,6 +38,14 @@ class Store:
 
     @url.setter
     def url(self, value):
+        raise AttributeError('The `url` attribute cannot be set')
+
+    @property
+    def search_url(self):
+        return self._search_url
+
+    @search_url.setter
+    def search_url(self, value):
         raise AttributeError('The `url` attribute cannot be set')
 
     @property
@@ -82,11 +94,13 @@ class SearchURL:
         self._page_num = value
 
     def make_new_url(self):
-        self.url = self.store.url + self.search_term + '&' + self.store.page + str(self.page_num)
+        self.url = self.store.url + self.store.search_url + self.search_term + '&' + self.store.page + str(self.page_num)
 
     def start_collecting_data(self):
         while self.page_num < self._page_limit and self._error404_counter < 2:
             self.make_new_url()
+            #import pdb
+            #pdb.set_trace()
             res = self.request_url()
             if res != -1:
                 self._items.append(res)
@@ -95,19 +109,55 @@ class SearchURL:
     def request_url(self):
         r = requests.get(self.url)
         if r.status_code == 404:
+            print('error 404')
             self._error404_counter += 1
             return -1
         else:
+            print('starting get_details')
             self._error404_counter = 0
             return self.get_details(r)
 
     def get_details(self, r):
+        print('get_details in SearchURL')
         return bs4.BeautifulSoup(r.text)
 
 
+class Tesco(SearchURL):
+    def __init__(self, search_term, store):
+        SearchURL.__init__(self, search_term=search_term, store=store)
 
+    def get_details(self, r):
+        print('get_details in Tesco class')
+        bso = bs4.BeautifulSoup(r.text)
+        items = bso.findAll('div', attrs={'class': 'tile-content'})
+        details = {}
+        for num, it in enumerate(items):
+            details[num] = self.get_item_information(it)
+        return details
 
-
+    def get_item_information(self, item):
+        cont = {}
+        cont['address'] = self.store.url + item.find('a')['href']
+        try:
+            cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text
+        except AttributeError:
+            cont['name'] = ''
+        try:
+            cont['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text
+        except AttributeError:
+            cont['price'] = ''#np.nan
+        try:
+            cont['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text
+        except AttributeError:
+            cont['unit price'] = ''#np.nan
+        try:
+            prom = item.find('div', attrs={'class': 'list-item-content promo-content-small'})
+           # import pdb
+            #pdb.set_trace()
+            cont['promotion'] = ' '.join([x.text for x in prom.findAll('span')])
+        except AttributeError:
+            cont['promotion'] = ''
+        return cont
 
 
 def init_stores(db):
@@ -116,4 +166,6 @@ def init_stores(db):
 
 if __name__ == '__main__':
     store_list = init_stores(STORE_DICT)
+    a = Tesco('milk', store_list[0])
+    a.start_collecting_data()
     print(store_list)
