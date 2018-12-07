@@ -133,6 +133,7 @@ class Tesco(SearchURL):
         details = {}
         for num, it in enumerate(items):
             details[num] = self.get_item_information(it)
+            self.product_info(details[num])
         return details
 
     def get_item_information(self, item):
@@ -159,6 +160,12 @@ class Tesco(SearchURL):
             cont['promotion'] = ''
         return cont
 
+    def product_info(self, detail):
+        r = requests.get(detail['address'])
+        bso = bs4.BeautifulSoup(r.text)
+        import pdb
+        pdb.set_trace()
+        prod_block = bso.find('div', attrs={'class':'product-blocks'})
 
 def init_stores(db):
     return [Store(st) for st in db]
