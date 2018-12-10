@@ -153,19 +153,50 @@ class Tesco(SearchURL):
             cont['unit price'] = ''#np.nan
         try:
             prom = item.find('div', attrs={'class': 'list-item-content promo-content-small'})
-           # import pdb
-            #pdb.set_trace()
             cont['promotion'] = ' '.join([x.text for x in prom.findAll('span')])
         except AttributeError:
             cont['promotion'] = ''
         return cont
 
-    def product_info(self, detail):
-        r = requests.get(detail['address'])
+
+class Sainsbury(SearchURL):
+    def __init__(self, search_term, store):
+        SearchURL.__init__(self, search_term=search_term, store=store)
+
+    def get_details(self, r):
+        print('get_details in Tesco class')
         bso = bs4.BeautifulSoup(r.text)
+        items = bso.findAll('li', attrs={'class': 'gridItem'})
         import pdb
         pdb.set_trace()
-        prod_block = bso.find('div', attrs={'class':'product-blocks'})
+        details = {}
+        for num, it in enumerate(items):
+            details[num] = self.get_item_information(it)
+            self.product_info(details[num])
+        return details
+
+    def get_item_information(self, item):
+        cont = {}
+        cont['address'] = self.store.url + item.find('a')['href']
+        try:
+            cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text
+        except AttributeError:
+            cont['name'] = ''
+        try:
+            cont['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text
+        except AttributeError:
+            cont['price'] = ''#np.nan
+        try:
+            cont['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text
+        except AttributeError:
+            cont['unit price'] = ''#np.nan
+        try:
+            prom = item.find('div', attrs={'class': 'list-item-content promo-content-small'})
+            cont['promotion'] = ' '.join([x.text for x in prom.findAll('span')])
+        except AttributeError:
+            cont['promotion'] = ''
+        return cont
+
 
 def init_stores(db):
     return [Store(st) for st in db]
@@ -175,4 +206,5 @@ if __name__ == '__main__':
     store_list = init_stores(STORE_DICT)
     a = Tesco('milk', store_list[0])
     a.start_collecting_data()
+    b = Sainsbury('milk', store_list[1])
     print(store_list)
