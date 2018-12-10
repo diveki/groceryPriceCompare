@@ -61,6 +61,7 @@ class SearchURL:
     def __init__(self, search_term, store):
         self._search_term = search_term
         self._store       = store
+        self._store_name  = store.name
         self._page_num    = 0
         self._url         = ''
         self._error404_counter = 0
@@ -137,6 +138,7 @@ class Tesco(SearchURL):
 
     def get_item_information(self, item):
         cont = {}
+        cont['store_name'] = self.store.name
         cont['address'] = self.store.url + item.find('a')['href']
         try:
             cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text.strip()
@@ -164,10 +166,8 @@ class Sainsbury(SearchURL):
 
     def get_details(self, r):
         bso = bs4.BeautifulSoup(r.text)
-        import pdb
-        pdb.set_trace()
         grid = bso.find('div', attrs={'class': 'section', 'id':'productsContainer'})
-         #   bso.findAll('li', attrs={'class': 'gridItem'})
+        items = grid.findAll('li', attrs={'class': 'gridItem'})
         details = {}
         for num, it in enumerate(items):
             details[num] = self.get_item_information(it)
@@ -175,8 +175,7 @@ class Sainsbury(SearchURL):
 
     def get_item_information(self, item):
         cont = {}
-        #import pdb
-        #pdb.set_trace()
+        cont['store_name'] = self.store.name
         cont['address'] = item.find('a')['href']
         try:
             cont['name'] = item.find('a').text.strip()
@@ -201,10 +200,15 @@ class Sainsbury(SearchURL):
 def init_stores(db):
     return [Store(st) for st in db]
 
+STORE_MAP = {'Tesco': Tesco,
+             'Sainsbury': Sainsbury}
+
 
 if __name__ == '__main__':
     store_list = init_stores(STORE_DICT)
-    a = Tesco('milk', store_list[0])
-    a.start_collecting_data()
-    b = Sainsbury('milk', store_list[1])
-    print(store_list)
+    prod_collect = []
+    for st in store_list:
+        class2call = STORE_MAP.get(st.name)
+        prod_info = class2call('milk', st)
+        prod_info.start_collecting_data()
+        prod_collect.append(prod_info._items)
