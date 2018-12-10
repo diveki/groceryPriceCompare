@@ -133,22 +133,21 @@ class Tesco(SearchURL):
         details = {}
         for num, it in enumerate(items):
             details[num] = self.get_item_information(it)
-            self.product_info(details[num])
         return details
 
     def get_item_information(self, item):
         cont = {}
         cont['address'] = self.store.url + item.find('a')['href']
         try:
-            cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text
+            cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text.strip()
         except AttributeError:
             cont['name'] = ''
         try:
-            cont['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text
+            cont['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text.strip()
         except AttributeError:
             cont['price'] = ''#np.nan
         try:
-            cont['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text
+            cont['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text.strip()
         except AttributeError:
             cont['unit price'] = ''#np.nan
         try:
@@ -164,35 +163,36 @@ class Sainsbury(SearchURL):
         SearchURL.__init__(self, search_term=search_term, store=store)
 
     def get_details(self, r):
-        print('get_details in Tesco class')
         bso = bs4.BeautifulSoup(r.text)
-        items = bso.findAll('li', attrs={'class': 'gridItem'})
         import pdb
         pdb.set_trace()
+        grid = bso.find('div', attrs={'class': 'section', 'id':'productsContainer'})
+         #   bso.findAll('li', attrs={'class': 'gridItem'})
         details = {}
         for num, it in enumerate(items):
             details[num] = self.get_item_information(it)
-            self.product_info(details[num])
         return details
 
     def get_item_information(self, item):
         cont = {}
-        cont['address'] = self.store.url + item.find('a')['href']
+        #import pdb
+        #pdb.set_trace()
+        cont['address'] = item.find('a')['href']
         try:
-            cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text
+            cont['name'] = item.find('a').text.strip()
         except AttributeError:
             cont['name'] = ''
         try:
-            cont['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text
+            cont['price'] = item.find('p', attrs={'class': 'pricePerUnit'}).text.strip()
         except AttributeError:
             cont['price'] = ''#np.nan
         try:
-            cont['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text
+            cont['unit price'] = item.find('p', attrs={'class': 'pricePerMeasure'}).text.strip()
         except AttributeError:
             cont['unit price'] = ''#np.nan
         try:
-            prom = item.find('div', attrs={'class': 'list-item-content promo-content-small'})
-            cont['promotion'] = ' '.join([x.text for x in prom.findAll('span')])
+            prom = item.find('div', attrs={'class': 'promotion'})
+            cont['promotion'] = prom.p.a.text.strip()
         except AttributeError:
             cont['promotion'] = ''
         return cont
