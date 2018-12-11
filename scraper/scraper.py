@@ -104,7 +104,7 @@ class SearchURL:
             #pdb.set_trace()
             res = self.request_url()
             if res != -1:
-                self._items.append(res)
+                self._items.extend(res)
             self.page_num += 1
 
     def request_url(self):
@@ -131,9 +131,11 @@ class Tesco(SearchURL):
         print('get_details in Tesco class')
         bso = bs4.BeautifulSoup(r.text)
         items = bso.findAll('div', attrs={'class': 'tile-content'})
-        details = {}
+        details = []
         for num, it in enumerate(items):
-            details[num] = self.get_item_information(it)
+            #import pdb
+            #pdb.set_trace()
+            details.append(self.get_item_information(it))
         return details
 
     def get_item_information(self, item):
@@ -168,9 +170,9 @@ class Sainsbury(SearchURL):
         bso = bs4.BeautifulSoup(r.text)
         grid = bso.find('div', attrs={'class': 'section', 'id':'productsContainer'})
         items = grid.findAll('li', attrs={'class': 'gridItem'})
-        details = {}
+        details = []
         for num, it in enumerate(items):
-            details[num] = self.get_item_information(it)
+            details.append(self.get_item_information(it))
         return details
 
     def get_item_information(self, item):
@@ -211,4 +213,4 @@ if __name__ == '__main__':
         class2call = STORE_MAP.get(st.name)
         prod_info = class2call('milk', st)
         prod_info.start_collecting_data()
-        prod_collect.append(prod_info._items)
+        prod_collect.extend(prod_info._items)
