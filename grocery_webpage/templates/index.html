@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<h1>Welcome to Groceries Compare!</h1>
+<form class="" action="{{ url_for('results') }}" method="post">
+  <input type="text" name="term" placeholder="Enter Your Search Term">
+  <button>Submit</button>
+</form>
+{% endblock %}
