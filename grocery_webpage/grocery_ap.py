@@ -28,3 +28,6 @@ def results():
         prod_collect.extend(prod_info._items)
     df = SearchResult(prod_collect)
     return(render_template('results.html', sterm=df.df.to_html()))
+
+if __name__ == '__main__':
+    app.run(debug = True)
