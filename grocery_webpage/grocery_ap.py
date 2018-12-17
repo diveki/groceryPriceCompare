@@ -27,7 +27,8 @@ def results():
         prod_info.start_collecting_data()
         prod_collect.extend(prod_info._items)
     df = SearchResult(prod_collect)
-    return(render_template('results.html', sterm=df.df.to_html()))
+    html_return = df.df2html_table(id='myTable', table_class='table table-hover', header_class='thead-dark')
+    return(render_template('results.html', sterm=html_return))
 
 if __name__ == '__main__':
     app.run(debug = True)
