@@ -4,7 +4,7 @@ body {
 
 table {
   border-spacing: 0;
-  width: 100%;
+  width: 90%;
   border: 1px solid #ddd;
 }
 
@@ -12,11 +12,11 @@ thead {
   cursor: pointer;
 }
 
-th, td {
+/* th, td {
   text-align: left;
   padding: 16px;
 }
 
 tr:nth-child(even) {
   background-color: #f2f2f2
-}
+} */

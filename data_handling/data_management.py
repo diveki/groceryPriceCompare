@@ -22,14 +22,14 @@ class SearchResult:
         hclass = kwargs.get('header_class', '')
         thead = self.create_table_header(hclass)
         tbody = self.create_table_body()
-        html = '<table class="{cls}" id="{id}"> {thead} {tbody} </table>'.format(cls="", id=tid, thead=thead, tbody=tbody)
+        html = '<table class="{cls}" id="{id}"> {thead} {tbody} </table>'.format(cls=tclass, id=tid, thead=thead, tbody=tbody)
         return html
 
     def create_table_header(self, hclass):
         cols = self.df.columns
         thb = ''
         for num, col in enumerate(cols):
-            thb = thb + '<th scope="col" onclick="sortTable({num})"> {text} </th>'.format(num=num, text=col.replace('_', ' ').capitalize())
+            thb = thb + '<th onclick="sortTable({num})"> {text} </th>'.format(num=num, text=col.replace('_', ' ').capitalize())
         th = '<thead class="{hclass}"> <tr> {thead_body} </tr> </thead>'.format(hclass=hclass, thead_body=thb)
         return th
 
