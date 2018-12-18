@@ -14,7 +14,15 @@ STORE_DICT = [{'name': 'Tesco',
               {'name': 'Sainsbury',
                'url': 'https://www.sainsburys.co.uk/',
                'search': 'webapp/wcs/stores/servlet/SearchDisplayView?storeId=10151&searchTerm=',
-               'page': 'beginIndex='}
+               'page': 'beginIndex='}#,
+               # {'name': 'Asda',
+               #  'url': 'https://www.asda.com/',
+               #  'search': 'search/',
+               #  'page': ''},
+               #  {'name': 'Waitrose',
+               #   'url': 'https://www.waitrose.com/',
+               #   'search': 'ecom/shop/search?&searchTerm=',
+               #   'page': ''}
               ]
 
 
@@ -197,11 +205,56 @@ class Sainsbury(SearchURL):
         return cont
 
 
+class Asda(SearchURL):
+    def __init__(self, search_term, store):
+        SearchURL.__init__(self, search_term=search_term, store=store)
+
+    def make_new_url(self):
+        self.url = self.url + self.search_term
+
+    def get_details(self, r):
+        bso = bs4.BeautifulSoup(r.text)
+        import pdb
+        pdb.set_trace()
+        #grid = bso.find('div', attrs={'class': 'section', 'id':'productsContainer'})
+        items = bso.findAll('div', attrs={'class': 'product-content'})
+        details = []
+        for num, it in enumerate(items):
+            details.append(self.get_item_information(it))
+        return details
+
+    def get_item_information(self, item):
+        cont = {}
+        cont['store_name'] = self.store.name
+        cont['address'] = item.find('a')['href']
+        try:
+            cont['name'] = item.find('a').text.strip()
+        except AttributeError:
+            cont['name'] = ''
+        try:
+            cont['price'] = item.find('p', attrs={'class': 'pricePerUnit'}).text.strip()
+        except AttributeError:
+            cont['price'] = ''#np.nan
+        try:
+            cont['unit price'] = item.find('p', attrs={'class': 'pricePerMeasure'}).text.strip()
+        except AttributeError:
+            cont['unit price'] = ''#np.nan
+        try:
+            prom = item.find('div', attrs={'class': 'promotion'})
+            cont['promotion'] = prom.p.a.text.strip()
+        except AttributeError:
+            cont['promotion'] = ''
+        return cont
+
+
 def init_stores(db):
     return [Store(st) for st in db]
 
 STORE_MAP = {'Tesco': Tesco,
-             'Sainsbury': Sainsbury}
+             'Sainsbury': Sainsbury#,
+             #'Asda': Asda,
+             #'Lidl': Lidl
+             }
 
 
 if __name__ == '__main__':
