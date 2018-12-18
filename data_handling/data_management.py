@@ -8,6 +8,8 @@ import numpy as np
 class SearchResult:
     def __init__(self, data):
         self.transform_data(data)
+        self.link_address_to_name()
+        self.clean_prices()
 
     def transform_data(self, data):
         hold_dict = {key: [] for key, value in data[0].items()}
@@ -15,6 +17,18 @@ class SearchResult:
             for key in item.keys():
                 hold_dict[key].append(item[key])
         self.df = pd.DataFrame(hold_dict)
+
+    def link_address_to_name(self):
+        self.df['link'] = self.df.apply(lambda row: '<a href="' + row['address'] + '">' + row['name'] + '</a>', axis=1)
+
+    def clean_prices(self):
+        self.df.price = self.df.price.str.replace(' ', '')
+
+
+
+class TransformDf2Html:
+    def __init__(self, df):
+        self.df = df
 
     def df2html_table(self, **kwargs):
         tid = kwargs.get('id', '')
@@ -57,4 +71,5 @@ if __name__ == '__main__':
         prod_collect.extend(prod_info._items)
 
     df = SearchResult(prod_collect)
-    html = df.df2html_table(id='myTable', table_class='table table-hover', header_class='thead-dark')
+    transdf = TransformDf2Html(df.df[['store_name', 'link', 'price', 'unit price', 'promotion']])
+    html = transdf.df2html_table(id='myTable', table_class='table table-hover', header_class='thead-dark')

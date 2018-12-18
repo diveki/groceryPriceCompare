@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scraper'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'data_handling'))
 
 from scraper import *
-from data_management import SearchResult
+from data_management import SearchResult, TransformDf2Html
 
 app = Flask(__name__)
 
@@ -27,7 +27,8 @@ def results():
         prod_info.start_collecting_data()
         prod_collect.extend(prod_info._items)
     df = SearchResult(prod_collect)
-    html_return = df.df2html_table(id='myTable', table_class='table table-hover', header_class='thead-dark')
+    transdf = TransformDf2Html(df.df[['store_name', 'link', 'price', 'unit price', 'promotion']])
+    html_return = transdf.df2html_table(id='myTable', table_class='table table-hover', header_class='thead-dark')
     return(render_template('results.html', sterm=html_return))
 
 if __name__ == '__main__':

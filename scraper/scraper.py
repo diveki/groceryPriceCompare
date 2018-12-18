@@ -4,6 +4,7 @@ Scraping classes
 
 import requests
 import bs4
+import urllib
 #import numpy as np
 
 STORE_DICT = [{'name': 'Tesco',
@@ -95,13 +96,12 @@ class SearchURL:
         self._page_num = value
 
     def make_new_url(self):
-        self.url = self.store.url + self.store.search_url + self.search_term + '&' + self.store.page + str(self.page_num)
+        self.url = urllib.parse.urljoin(self.store.url, self.store.search_url)
+        self.url = self.url + self.search_term + '&' + self.store.page + str(self.page_num)
 
     def start_collecting_data(self):
         while self.page_num < self._page_limit and self._error404_counter < 2:
             self.make_new_url()
-            #import pdb
-            #pdb.set_trace()
             res = self.request_url()
             if res != -1:
                 self._items.extend(res)
@@ -133,15 +133,13 @@ class Tesco(SearchURL):
         items = bso.findAll('div', attrs={'class': 'tile-content'})
         details = []
         for num, it in enumerate(items):
-            #import pdb
-            #pdb.set_trace()
             details.append(self.get_item_information(it))
         return details
 
     def get_item_information(self, item):
         cont = {}
         cont['store_name'] = self.store.name
-        cont['address'] = self.store.url + item.find('a')['href']
+        cont['address'] = urllib.parse.urljoin(self.store.url, item.find('a')['href'])
         try:
             cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text.strip()
         except AttributeError:
