@@ -5,6 +5,8 @@ Scraping classes
 import requests
 import bs4
 import urllib
+from selenium import webdriver
+import time
 #import numpy as np
 
 STORE_DICT = [{'name': 'Tesco',
@@ -14,11 +16,11 @@ STORE_DICT = [{'name': 'Tesco',
               {'name': 'Sainsbury',
                'url': 'https://www.sainsburys.co.uk/',
                'search': 'webapp/wcs/stores/servlet/SearchDisplayView?storeId=10151&searchTerm=',
-               'page': 'beginIndex='}#,
-               # {'name': 'Asda',
-               #  'url': 'https://groceries.asda.com/',
-               #  'search': 'search/',
-               #  'page': ''},
+               'page': 'beginIndex='},
+              {'name': 'Asda',
+               'url': 'https://groceries.asda.com/',
+               'search': 'search/',
+               'page': ''}
                #  {'name': 'Waitrose',
                #   'url': 'https://www.waitrose.com/',
                #   'search': 'ecom/shop/search?&searchTerm=',
@@ -210,9 +212,16 @@ class Asda(SearchURL):
         SearchURL.__init__(self, search_term=search_term, store=store)
 
     def make_new_url(self):
+        self.url = urllib.parse.urljoin(self.store.url, self.store.search_url)
         self.url = self.url + self.search_term
 
     def get_details(self, r):
+        driver = webdriver.PhantomJS()
+        import pdb
+        pdb.set_trace()
+        driver.get(self.url)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        
         bso = bs4.BeautifulSoup(r.text)
         import pdb
         pdb.set_trace()
@@ -251,8 +260,8 @@ def init_stores(db):
     return [Store(st) for st in db]
 
 STORE_MAP = {'Tesco': Tesco,
-             'Sainsbury': Sainsbury#,
-             #'Asda': Asda,
+             'Sainsbury': Sainsbury,
+             'Asda': Asda
              #'Lidl': Lidl
              }
 
