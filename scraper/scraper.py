@@ -124,7 +124,7 @@ class SearchURL:
             self._error404_counter += 1
             return -1
         else:
-            print('starting get_details')
+            print('starting get_details ' + self.store.name)
             self._error404_counter = 0
             return self.get_details(r)
 
@@ -217,43 +217,51 @@ class Asda(SearchURL):
 
     def get_details(self, r):
         driver = webdriver.PhantomJS()
-        import pdb
-        pdb.set_trace()
         driver.get(self.url)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        
-        bso = bs4.BeautifulSoup(r.text)
         import pdb
-        pdb.set_trace()
-        #grid = bso.find('div', attrs={'class': 'section', 'id':'productsContainer'})
-        items = bso.findAll('div', attrs={'class': 'product-content'})
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/1.5);")
+        time.sleep(1)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/1.1);")
+        time.sleep(1)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        bso = bs4.BeautifulSoup(driver.page_source, 'html.parser')
+        grid = bso.findAll('div', id=lambda x: x and x.startswith('listingsContainer'))
         details = []
-        for num, it in enumerate(items):
-            details.append(self.get_item_information(it))
+
+        for gr in grid:
+            items = gr.findAll('div', attrs={'class': 'product-content'})
+            for num, it in enumerate(items):
+                details.append(self.get_item_information(it))
         return details
 
     def get_item_information(self, item):
-        cont = {}
-        cont['store_name'] = self.store.name
-        cont['address'] = item.find('a')['href']
+        contain = {}
+        contain['store_name'] = self.store.name
+        # import pdb
+        # pdb.set_trace()
+        contain['address'] = urllib.parse.urljoin(self.store.url, item.find('a')['href'])
         try:
-            cont['name'] = item.find('a').text.strip()
+            contain['name'] = item.find('a').text.strip()
         except AttributeError:
-            cont['name'] = ''
+            contain['name'] = ''
         try:
-            cont['price'] = item.find('p', attrs={'class': 'pricePerUnit'}).text.strip()
+            xx = item.find('span', attrs={'class': 'price'})
+            contain['price'] = xx.findAll('span')[-1].text.strip()
         except AttributeError:
-            cont['price'] = ''#np.nan
+            contain['price'] = ''#np.nan
         try:
-            cont['unit price'] = item.find('p', attrs={'class': 'pricePerMeasure'}).text.strip()
+            unit_price = item.find('span', attrs={'class': 'priceInformation'}).text.strip()
+            unit_price = unit_price.replace('(', '')
+            unit_price = unit_price.replace(')', '')
+            contain['unit price'] = unit_price
         except AttributeError:
-            cont['unit price'] = ''#np.nan
+            contain['unit price'] = ''#np.nan
         try:
-            prom = item.find('div', attrs={'class': 'promotion'})
-            cont['promotion'] = prom.p.a.text.strip()
+            prom = item.find('span', attrs={'class': 'linksave'})
+            contain['promotion'] = prom.text.strip()
         except AttributeError:
-            cont['promotion'] = ''
-        return cont
+            contain['promotion'] = ''
+        return contain
 
 
 def init_stores(db):
