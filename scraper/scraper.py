@@ -7,6 +7,7 @@ import bs4
 import urllib
 from selenium import webdriver
 import time
+import re
 #import numpy as np
 
 STORE_DICT = [{'name': 'Tesco',
@@ -20,11 +21,11 @@ STORE_DICT = [{'name': 'Tesco',
               {'name': 'Asda',
                'url': 'https://groceries.asda.com/',
                'search': 'search/',
-               'page': ''}
-               #  {'name': 'Waitrose',
-               #   'url': 'https://www.waitrose.com/',
-               #   'search': 'ecom/shop/search?&searchTerm=',
-               #   'page': ''}
+               'page': ''},
+                {'name': 'Waitrose',
+                 'url': 'https://www.waitrose.com/',
+                 'search': 'ecom/shop/search?&searchTerm=',
+                 'page': ''}
               ]
 
 
@@ -210,21 +211,20 @@ class Sainsbury(SearchURL):
 class Asda(SearchURL):
     def __init__(self, search_term, store):
         SearchURL.__init__(self, search_term=search_term, store=store)
+        self.driver = driver = webdriver.PhantomJS()
 
     def make_new_url(self):
         self.url = urllib.parse.urljoin(self.store.url, self.store.search_url)
         self.url = self.url + self.search_term
 
     def get_details(self, r):
-        driver = webdriver.PhantomJS()
-        driver.get(self.url)
-        import pdb
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/1.5);")
+        self.driver.get(self.url)
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight/1.5);")
         time.sleep(1)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/1.1);")
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight/1.1);")
         time.sleep(1)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        bso = bs4.BeautifulSoup(driver.page_source, 'html.parser')
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        bso = bs4.BeautifulSoup(self.driver.page_source, 'html.parser')
         grid = bso.findAll('div', id=lambda x: x and x.startswith('listingsContainer'))
         details = []
 
@@ -264,13 +264,62 @@ class Asda(SearchURL):
         return contain
 
 
+class Waitrose(SearchURL):
+    def __init__(self, search_term, store):
+        SearchURL.__init__(self, search_term=search_term, store=store)
+        self.driver = driver = webdriver.PhantomJS()
+
+    def make_new_url(self):
+        self.url = urllib.parse.urljoin(self.store.url, self.store.search_url)
+        self.url = self.url + self.search_term
+
+    def get_details(self, r):
+        self.driver.get(self.url)
+        bso = bs4.BeautifulSoup(self.driver.page_source, 'html.parser')
+        items = bso.findAll('article', attrs={'data-test':'product-pod'})
+        details = []
+        for num, it in enumerate(items):
+            details.append(self.get_item_information(it))
+        return details
+
+    def get_item_information(self, item):
+        contain = {}
+        contain['store_name'] = self.store.name
+        contain['address'] = urllib.parse.urljoin(self.store.url, item.header.a['href'])
+        try:
+            contain['name'] = item.header.span.text.strip()
+        except AttributeError:
+            contain['name'] = ''
+        # try:
+        #     img = item.find('picture')
+        #     contain['image'] = img.div.img['src']
+        # except AttributeError:
+        #     contain['image'] = ''
+        price_tag = item.find('div', {'class': re.compile(r'prices')})
+        try:
+            contain['price'] = price_tag.span.span.text.strip()
+        except AttributeError:
+            contain['price'] = ''#np.nan
+        try:
+            unit_price = price_tag.findAll('span')[-1].text
+            unit_price = re.match(r'.*\((.*)\)', unit_price)
+            contain['unit price'] = unit_price.group(1)
+        except AttributeError:
+            contain['unit price'] = ''#np.nan
+        try:
+            prom = item.find('span', {'class': re.compile(r'offerDescription')})
+            contain['promotion'] = prom.text.strip()
+        except AttributeError:
+            contain['promotion'] = ''
+        return contain
+
 def init_stores(db):
     return [Store(st) for st in db]
 
 STORE_MAP = {'Tesco': Tesco,
              'Sainsbury': Sainsbury,
-             'Asda': Asda
-             #'Lidl': Lidl
+             'Asda': Asda,
+             'Waitrose': Waitrose
              }
 
 
