@@ -13,13 +13,16 @@ class SearchResult:
 
     def transform_data(self, data):
         hold_dict = {key: [] for key, value in data[0].items()}
+        import pdb
         for item in data:
+            if 'image' not in item.keys():
+                pdb.set_trace()
             for key in item.keys():
                 hold_dict[key].append(item[key])
         self.df = pd.DataFrame(hold_dict)
 
     def link_address_to_name(self):
-        self.df['link'] = self.df.apply(lambda row: '<a href="' + row['address'] + '">' + row['name'] + '</a>', axis=1)
+        self.df['link'] = self.df.apply(lambda row: '<a href="' + row['address'] + '">' + row['name'] + '<img src="' + row['image'] + '" alt="" ' + '</a>', axis=1)
 
     def clean_prices(self):
         self.df.price = self.df.price.str.replace(' ', '')

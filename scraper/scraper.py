@@ -77,7 +77,7 @@ class SearchURL:
         self._page_num    = 0
         self._url         = ''
         self._error404_counter = 0
-        self._page_limit  = 3
+        self._page_limit  = 2
         self._items       = []
 
     @property
@@ -140,7 +140,7 @@ class Tesco(SearchURL):
 
     def get_details(self, r):
         print('get_details in Tesco class')
-        bso = bs4.BeautifulSoup(r.text)
+        bso = bs4.BeautifulSoup(r.text, 'html.parser')
         items = bso.findAll('div', attrs={'class': 'tile-content'})
         details = []
         for num, it in enumerate(items):
@@ -148,27 +148,32 @@ class Tesco(SearchURL):
         return details
 
     def get_item_information(self, item):
-        cont = {}
-        cont['store_name'] = self.store.name
-        cont['address'] = urllib.parse.urljoin(self.store.url, item.find('a')['href'])
+        contain = {}
+        contain['store_name'] = self.store.name
+        contain['address'] = urllib.parse.urljoin(self.store.url, item.find('a')['href'])
         try:
-            cont['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text.strip()
+            contain['name'] = item.find('a', attrs={'class': 'product-tile--title product-tile--browsable'}).text.strip()
         except AttributeError:
-            cont['name'] = ''
+            contain['name'] = ''
         try:
-            cont['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text.strip()
+            img = item.find('img')
+            contain['image'] = img['src']
         except AttributeError:
-            cont['price'] = ''#np.nan
+            contain['image'] = ''
         try:
-            cont['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text.strip()
+            contain['price'] = item.find('div', attrs={'class': 'price-control-wrapper'}).text.strip()
         except AttributeError:
-            cont['unit price'] = ''#np.nan
+            contain['price'] = ''#np.nan
+        try:
+            contain['unit price'] = item.find('div', attrs={'class': 'price-per-quantity-weight'}).text.strip()
+        except AttributeError:
+            contain['unit price'] = ''#np.nan
         try:
             prom = item.find('div', attrs={'class': 'list-item-content promo-content-small'})
-            cont['promotion'] = ' '.join([x.text for x in prom.findAll('span')])
+            contain['promotion'] = ' '.join([x.text for x in prom.findAll('span')])
         except AttributeError:
-            cont['promotion'] = ''
-        return cont
+            contain['promotion'] = ''
+        return contain
 
 
 class Sainsbury(SearchURL):
@@ -176,7 +181,7 @@ class Sainsbury(SearchURL):
         SearchURL.__init__(self, search_term=search_term, store=store)
 
     def get_details(self, r):
-        bso = bs4.BeautifulSoup(r.text)
+        bso = bs4.BeautifulSoup(r.text, 'html.parser')
         grid = bso.find('div', attrs={'class': 'section', 'id':'productsContainer'})
         items = grid.findAll('li', attrs={'class': 'gridItem'})
         details = []
@@ -185,27 +190,32 @@ class Sainsbury(SearchURL):
         return details
 
     def get_item_information(self, item):
-        cont = {}
-        cont['store_name'] = self.store.name
-        cont['address'] = item.find('a')['href']
+        contain = {}
+        contain['store_name'] = self.store.name
+        contain['address'] = item.find('a')['href']
         try:
-            cont['name'] = item.find('a').text.strip()
+            contain['name'] = item.find('a').text.strip()
         except AttributeError:
-            cont['name'] = ''
+            contain['name'] = ''
         try:
-            cont['price'] = item.find('p', attrs={'class': 'pricePerUnit'}).text.strip()
+            img = item.find('img')
+            contain['image'] = img['src']
         except AttributeError:
-            cont['price'] = ''#np.nan
+            contain['image'] = ''
         try:
-            cont['unit price'] = item.find('p', attrs={'class': 'pricePerMeasure'}).text.strip()
+            contain['price'] = item.find('p', attrs={'class': 'pricePerUnit'}).text.strip()
         except AttributeError:
-            cont['unit price'] = ''#np.nan
+            contain['price'] = ''#np.nan
+        try:
+            contain['unit price'] = item.find('p', attrs={'class': 'pricePerMeasure'}).text.strip()
+        except AttributeError:
+            contain['unit price'] = ''#np.nan
         try:
             prom = item.find('div', attrs={'class': 'promotion'})
-            cont['promotion'] = prom.p.a.text.strip()
+            contain['promotion'] = prom.p.a.text.strip()
         except AttributeError:
-            cont['promotion'] = ''
-        return cont
+            contain['promotion'] = ''
+        return contain
 
 
 class Asda(SearchURL):
@@ -237,8 +247,6 @@ class Asda(SearchURL):
     def get_item_information(self, item):
         contain = {}
         contain['store_name'] = self.store.name
-        # import pdb
-        # pdb.set_trace()
         contain['address'] = urllib.parse.urljoin(self.store.url, item.find('a')['href'])
         try:
             contain['name'] = item.find('a').text.strip()
@@ -249,6 +257,11 @@ class Asda(SearchURL):
             contain['price'] = xx.findAll('span')[-1].text.strip()
         except AttributeError:
             contain['price'] = ''#np.nan
+        try:
+            img = item.parent.find('img')
+            contain['image'] = img['src']
+        except:
+            contain['image'] = ''
         try:
             unit_price = item.find('span', attrs={'class': 'priceInformation'}).text.strip()
             unit_price = unit_price.replace('(', '')
@@ -267,7 +280,7 @@ class Asda(SearchURL):
 class Waitrose(SearchURL):
     def __init__(self, search_term, store):
         SearchURL.__init__(self, search_term=search_term, store=store)
-        self.driver = driver = webdriver.PhantomJS()
+        self.driver = webdriver.PhantomJS()
 
     def make_new_url(self):
         self.url = urllib.parse.urljoin(self.store.url, self.store.search_url)
@@ -290,11 +303,11 @@ class Waitrose(SearchURL):
             contain['name'] = item.header.span.text.strip()
         except AttributeError:
             contain['name'] = ''
-        # try:
-        #     img = item.find('picture')
-        #     contain['image'] = img.div.img['src']
-        # except AttributeError:
-        #     contain['image'] = ''
+        try:
+            img = item.find('picture')
+            contain['image'] = img.div.img['src']
+        except AttributeError:
+            contain['image'] = ''
         price_tag = item.find('div', {'class': re.compile(r'prices')})
         try:
             contain['price'] = price_tag.span.span.text.strip()
