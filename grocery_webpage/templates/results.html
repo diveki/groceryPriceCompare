@@ -3,5 +3,30 @@
 {% block body %}
 <h1>This is what we have found!</h1>
 <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true">New search</a>
-{{ sterm | safe}}
+<!-- {{ sterm | safe}}  -->
+
+  {% for item in sterm %}
+
+      {% if loop.index is odd %}
+        <div class="row">
+      {% endif %}
+        <div class="card" style="width: 18rem;">
+          <a href="{{ item['address'] }}">
+          <div class="card-header">{{ item['store_name'] }}</div>
+          <img src="{{ item['image'] }}" class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">{{ item['name'] }}</h5>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">Price: {{ item['price'] }}</li>
+              <li class="list-group-item">Unit price: {{ item['unit price'] }}</li>
+              <li class="list-group-item">Promotion: {{ item['promotion'] }}</li>
+            </ul>
+          </div>
+          </a>
+        </div>
+      {% if loop.index is even %}
+        </div>
+      {% endif %}
+
+  {% endfor %}
 {% endblock %}

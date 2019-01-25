@@ -13,7 +13,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # return('Hello World')
     return(render_template('index.html'))
 
 @app.route('/results', methods=['POST'])
@@ -29,7 +28,8 @@ def results():
     df = SearchResult(prod_collect)
     transdf = TransformDf2Html(df.df[['store_name', 'link', 'price', 'unit price', 'promotion']])
     html_return = transdf.df2html_table(id='myTable', table_class='table table-hover', header_class='thead-dark')
-    return(render_template('results.html', sterm=html_return))
+    # return(render_template('results.html', sterm=html_return))
+    return(render_template('results.html', sterm=prod_collect))
 
 if __name__ == '__main__':
     app.run(debug = True)
