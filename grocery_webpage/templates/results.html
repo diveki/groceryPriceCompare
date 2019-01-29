@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<h1>This is what we have found!</h1>
-<a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true">New search</a>
+<h1> {{ result_lan.header1 }} </h1>
+<a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true"> {{ result_lan.newsearch }} </a>
 <!-- {{ sterm | safe}}  -->
 
   {% for item in sterm %}
@@ -17,9 +17,9 @@
           <div class="card-body">
             <h5 class="card-title">{{ item['name'] }}</h5>
             <ul class="list-group list-group-flush">
-              <li class="list-group-item">Price: {{ item['price'] }}</li>
-              <li class="list-group-item">Unit price: {{ item['unit price'] }}</li>
-              <li class="list-group-item">Promotion: {{ item['promotion'] }}</li>
+              <li class="list-group-item"><h6>{{ result_lan.price }}</h6> {{ item['price'] }}</li>
+              <li class="list-group-item"><h6>{{ result_lan.unit_price }}</h6> {{ item['unit price'] }}</li>
+              <li class="list-group-item"><h6>{{ result_lan.promotion }}</h6> {{ item['promotion'] }}</li>
             </ul>
           </div>
           </a>
