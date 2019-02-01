@@ -7,9 +7,11 @@ import numpy as np
 
 class SearchResult:
     def __init__(self, data):
-        self.transform_data(data)
-        self.link_address_to_name()
-        self.clean_prices()
+        self.data = data
+        if data != []:
+            self.transform_data(data)
+            self.link_address_to_name()
+            self.clean_prices()
 
     def transform_data(self, data):
         hold_dict = {key: [] for key, value in data[0].items()}
@@ -26,6 +28,19 @@ class SearchResult:
 
     def clean_prices(self):
         self.df.price = self.df.price.str.replace(' ', '')
+
+    def sort_df(self, byWhat='price'):
+        self.df = self.df.sort_values(by=byWhat)
+        self.df = self.df.reset_index(drop=True)
+        sorted_list = self.df2list()
+        return sorted_list
+
+    def df2list(self):
+        keys = self.df.columns
+        res = []
+        for row in range(self.df.shape[0]):
+            res.append({key: self.df.loc[row, key] for key in keys})
+        return res
 
 
 
@@ -65,10 +80,10 @@ class TransformDf2Html:
 
 
 if __name__ == '__main__':
-    store_list = init_stores(STORE_DICT)
+    store_list = init_stores(STORE_DICT['HU'])
     prod_collect = []
     for st in store_list:
-        class2call = STORE_MAP.get(st.name)
+        class2call = STORE_MAP['HU'].get(st.name)
         prod_info = class2call('alpro coconut', st)
         prod_info.start_collecting_data()
         prod_collect.extend(prod_info._items)

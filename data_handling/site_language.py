@@ -36,13 +36,25 @@ results_lang = {
             'newsearch': 'New search',
             'price':     'Price: ',
             'unit_price':'Unit price: ',
-            'promotion': 'Promotion: '
+            'promotion': 'Promotion: ',
+            'sort_update': 'Update',
+            'sort_by_name': 'By product name',
+            'sort_by_price': 'By product price',
+            'sort_by_supermarket': 'By supermarket',
+            'sort_by_unit_price': 'By product unit price',
+            'sort_by_promotion': 'By promotions'
     },
     'HU': {
             'header1': 'Ezeket talaltuk!',
             'newsearch': 'Uj kereses',
             'price':     'Ar: ',
             'unit_price':'Egyseg ar: ',
-            'promotion': 'Akcio: '
+            'promotion': 'Akcio: ',
+            'sort_update': 'Frissit',
+            'sort_by_name': 'Termek nev szerint',
+            'sort_by_price': 'Termek ar szerint',
+            'sort_by_supermarket': 'Szupermarket szerint',
+            'sort_by_unit_price': 'Egysegar szerint',
+            'sort_by_promotion': 'Akciok szerint'
     }
 }
