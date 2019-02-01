@@ -11,7 +11,7 @@ from store_classes import *
 
 
 STORE_DICT_HU = [{'name': 'Tesco',
-               'url': 'https://www.tesco.com/',
+               'url': 'https://bevasarlas.tesco.hu/',
                'search': 'groceries/en-GB/search?query=',
                'page': 'page='}
                    ]
